@@ -33,7 +33,7 @@ func StartServer():
 func SetupDBPath():
 	var ipAdd = IP.resolve_hostname(str(OS.get_environment("COMPUTERNAME")),1)
 	print("IP ADD: " + ipAdd)
-	if(ipAdd.contains("192.168.40")):
+	if(ipAdd.contains("192.168.40") || ipAdd.contains("172.30.240.1") ):
 		dbName = "res://0-Backend/DBLayer/GodotMMO_Local.db3"
 	else:
 		dbName = "/game/GodotMMO.db3"
