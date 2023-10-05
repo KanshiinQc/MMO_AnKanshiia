@@ -1,0 +1,11 @@
+[gd_scene load_steps=2 format=3 uid="uid://bvpkh3mxshun2"]
+
+[ext_resource type="Script" path="res://Maps/FightMap.gd" id="1_hlmwy"]
+
+[node name="FightMap" type="Node2D"]
+script = ExtResource("1_hlmwy")
+
+[node name="MapTiles" type="Node2D" parent="."]
+
+[node name="MultiplayerSpawner" type="MultiplayerSpawner" parent="."]
+spawn_path = NodePath("..")

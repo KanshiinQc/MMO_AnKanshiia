@@ -1,0 +1,140 @@
+[gd_scene load_steps=11 format=3 uid="uid://cwwbx0kpom6aj"]
+
+[ext_resource type="Script" path="res://0-Frontend/GUI/GUI.gd" id="1_mdt8w"]
+[ext_resource type="PackedScene" uid="uid://ly1j0x47yd6u" path="res://Main/Login.tscn" id="2_vlwbg"]
+[ext_resource type="Script" path="res://0-Frontend/GUI/ChatBox.gd" id="2_xncc3"]
+[ext_resource type="Texture2D" uid="uid://c0dl1twyxe575" path="res://0-Frontend/GUI/Sprites/frame_0_delay-0.1s.png" id="4_40pr1"]
+[ext_resource type="Texture2D" uid="uid://dikcc0ptpr73w" path="res://0-Frontend/GUI/Sprites/frame_1_delay-0.1s.png" id="5_xc8ux"]
+[ext_resource type="Texture2D" uid="uid://325mue81xmch" path="res://0-Frontend/GUI/Sprites/frame_2_delay-0.1s.png" id="6_vhdue"]
+[ext_resource type="Texture2D" uid="uid://c5bjvgsq1kmx5" path="res://0-Frontend/GUI/Sprites/frame_3_delay-0.1s.png" id="7_pekao"]
+
+[sub_resource type="Theme" id="Theme_ukbys"]
+default_font_size = 12
+
+[sub_resource type="Theme" id="Theme_mqbnx"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_lgxvv"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("4_40pr1")
+}, {
+"duration": 1.0,
+"texture": ExtResource("5_xc8ux")
+}, {
+"duration": 1.0,
+"texture": ExtResource("6_vhdue")
+}, {
+"duration": 1.0,
+"texture": ExtResource("7_pekao")
+}],
+"loop": true,
+"name": &"default",
+"speed": 8.0
+}]
+
+[node name="HUD" type="CanvasLayer"]
+script = ExtResource("1_mdt8w")
+
+[node name="ChatBox" type="VBoxContainer" parent="."]
+visible = false
+offset_top = 585.0
+offset_right = 276.0
+offset_bottom = 720.0
+script = ExtResource("2_xncc3")
+
+[node name="RichTextLabel" type="RichTextLabel" parent="ChatBox"]
+layout_mode = 2
+size_flags_vertical = 3
+bbcode_enabled = true
+scroll_following = true
+
+[node name="HBoxContainer" type="HBoxContainer" parent="ChatBox"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="ChatBox/HBoxContainer"]
+layout_mode = 2
+theme = SubResource("Theme_ukbys")
+text = "[Player]"
+
+[node name="LineEdit" type="LineEdit" parent="ChatBox/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Login" parent="." instance=ExtResource("2_vlwbg")]
+offset_left = 490.0
+offset_right = -490.0
+size_flags_vertical = 4
+
+[node name="Notifications" type="Label" parent="."]
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -20.0
+offset_right = 20.0
+offset_bottom = 23.0
+grow_horizontal = 2
+horizontal_alignment = 1
+
+[node name="PlayerHealth" type="ProgressBar" parent="."]
+visible = false
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -16.0
+offset_top = -64.0
+offset_right = 16.0
+grow_horizontal = 2
+grow_vertical = 0
+theme = SubResource("Theme_mqbnx")
+value = 50.0
+fill_mode = 3
+show_percentage = false
+
+[node name="Label" type="Label" parent="PlayerHealth"]
+layout_mode = 0
+offset_left = -4.0
+offset_top = -23.0
+offset_right = 36.0
+horizontal_alignment = 1
+
+[node name="LootWindow" type="VBoxContainer" parent="."]
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -160.0
+offset_top = -90.0
+offset_right = 160.0
+offset_bottom = 90.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Loading" type="AnimatedSprite2D" parent="."]
+position = Vector2(640, 64)
+sprite_frames = SubResource("SpriteFrames_lgxvv")
+autoplay = "default"
+frame_progress = 0.489671
+
+[node name="CurrentPlayerTurn" type="Label" parent="."]
+visible = false
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -135.0
+offset_top = -23.0
+grow_horizontal = 0
+grow_vertical = 0
+text = "Kanshiin's turn"
+horizontal_alignment = 2
+
+[connection signal="text_submitted" from="ChatBox/HBoxContainer/LineEdit" to="ChatBox" method="_on_line_edit_text_submitted"]
+[connection signal="gui_input" from="LootWindow" to="." method="_on_loot_window_gui_input"]

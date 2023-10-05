@@ -1,0 +1,78 @@
+[gd_scene load_steps=11 format=3 uid="uid://cacx8jcb0j30h"]
+
+[ext_resource type="Texture2D" uid="uid://dikhqnru31kfy" path="res://Mobs/Sprites/IsometricTRPGAssetPack_Entities.png" id="1_26ekg"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_63n8n"]
+atlas = ExtResource("1_26ekg")
+region = Rect2(0, 17, 16, 17)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_e3htq"]
+atlas = ExtResource("1_26ekg")
+region = Rect2(16, 17, 16, 17)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_1aghq"]
+atlas = ExtResource("1_26ekg")
+region = Rect2(32, 17, 16, 17)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_47trw"]
+atlas = ExtResource("1_26ekg")
+region = Rect2(48, 17, 16, 17)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_alkbh"]
+atlas = ExtResource("1_26ekg")
+region = Rect2(0, 0, 16, 17)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_x5k72"]
+atlas = ExtResource("1_26ekg")
+region = Rect2(16, 0, 16, 17)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_n6wp1"]
+atlas = ExtResource("1_26ekg")
+region = Rect2(32, 0, 16, 17)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_0j23b"]
+atlas = ExtResource("1_26ekg")
+region = Rect2(48, 0, 16, 17)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_mii1k"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_63n8n")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_e3htq")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_1aghq")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_47trw")
+}],
+"loop": true,
+"name": &"ATTACK_DOWN",
+"speed": 8.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_alkbh")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_x5k72")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_n6wp1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_0j23b")
+}],
+"loop": true,
+"name": &"ATTACK_UP",
+"speed": 8.0
+}]
+
+[node name="Mob" type="Node2D"]
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+sprite_frames = SubResource("SpriteFrames_mii1k")
+animation = &"ATTACK_DOWN"

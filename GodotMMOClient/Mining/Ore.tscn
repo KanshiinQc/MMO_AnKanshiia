@@ -1,0 +1,65 @@
+[gd_scene load_steps=8 format=3 uid="uid://cohjj2mjuy476"]
+
+[ext_resource type="Script" path="res://Mining/Ore.gd" id="1_ru5tf"]
+[ext_resource type="Texture2D" uid="uid://bx5s8eefuuv0t" path="res://Mining/Sprites/mining_ores.png" id="1_ue7d3"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_agb62"]
+atlas = ExtResource("1_ue7d3")
+region = Rect2(32, 16, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_sixc8"]
+atlas = ExtResource("1_ue7d3")
+region = Rect2(112, 16, 16, 16)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_wrjbk"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_agb62")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_sixc8")
+}],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_kslsm"]
+size = Vector2(10, 10)
+
+[sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_r7yt1"]
+properties/0/path = NodePath(".:position")
+properties/0/spawn = true
+properties/0/sync = false
+properties/0/watch = false
+properties/1/path = NodePath("AnimatedSprite2D:animation")
+properties/1/spawn = true
+properties/1/sync = true
+properties/1/watch = false
+properties/2/path = NodePath("AnimatedSprite2D:frame")
+properties/2/spawn = true
+properties/2/sync = true
+properties/2/watch = false
+properties/3/path = NodePath(".:networkUID")
+properties/3/spawn = true
+properties/3/sync = false
+properties/3/watch = false
+
+[node name="Node2D" type="Node2D"]
+z_index = 2
+script = ExtResource("1_ru5tf")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+sprite_frames = SubResource("SpriteFrames_wrjbk")
+
+[node name="Area2D" type="Area2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
+position = Vector2(-1, 0)
+shape = SubResource("RectangleShape2D_kslsm")
+
+[node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="."]
+replication_config = SubResource("SceneReplicationConfig_r7yt1")
+
+[connection signal="input_event" from="Area2D" to="." method="_on_area_2d_input_event"]

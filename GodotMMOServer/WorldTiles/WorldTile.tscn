@@ -1,0 +1,11 @@
+[gd_scene load_steps=2 format=3 uid="uid://dsbj4t7koyl20"]
+
+[ext_resource type="Texture2D" uid="uid://cn1w0rcit02wg" path="res://WorldTiles/IsoTiles/tile002.png" id="1_tqrii"]
+
+[node name="WorldTile" type="Node2D"]
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("1_tqrii")
+
+[node name="MovePosition" type="Sprite2D" parent="."]
+position = Vector2(0, -8)

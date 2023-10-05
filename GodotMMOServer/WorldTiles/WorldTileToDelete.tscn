@@ -1,0 +1,19 @@
+[gd_scene load_steps=2 format=3 uid="uid://dubbgttm2ppgo"]
+
+[ext_resource type="Texture2D" uid="uid://cuyhmue3wy1gx" path="res://WorldTiles/IsoTiles/tile012.png" id="1_hs4p0"]
+
+[node name="WorldTile" type="Node2D"]
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("1_hs4p0")
+
+[node name="Area2D" type="Area2D" parent="."]
+
+[node name="CollisionToDelete" type="CollisionPolygon2D" parent="Area2D"]
+polygon = PackedVector2Array(-14, -2, 0, -9, 14, -2, 0, 6)
+
+[node name="MovePosition" type="Sprite2D" parent="."]
+position = Vector2(0, -8)
+
+[node name="NavigationObstacle2D" type="NavigationObstacle2D" parent="."]
+vertices = PackedVector2Array(0, 6, 15, -2, 0, -10, -15, -2)

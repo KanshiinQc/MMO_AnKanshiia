@@ -1,0 +1,7 @@
+[gd_scene format=3 uid="uid://g5njh648ou6c"]
+
+[node name="ResourcesContainer" type="Node2D"]
+
+[node name="MultiplayerSpawner" type="MultiplayerSpawner" parent="."]
+_spawnable_scenes = PackedStringArray("res://Mining/Ore.tscn")
+spawn_path = NodePath("..")

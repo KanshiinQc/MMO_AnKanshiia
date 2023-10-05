@@ -1,0 +1,27 @@
+[gd_scene load_steps=4 format=3 uid="uid://dsbj4t7koyl20"]
+
+[ext_resource type="Script" path="res://WorldTiles/WorldTile.gd" id="1_0cjef"]
+[ext_resource type="Texture2D" uid="uid://cn1w0rcit02wg" path="res://WorldTiles/IsoTiles/tile002.png" id="1_tqrii"]
+[ext_resource type="PackedScene" uid="uid://bfggsdyakb6fo" path="res://0-Frontend/GUI/SelectedTile.tscn" id="3_ypon3"]
+
+[node name="WorldTile" type="Node2D"]
+script = ExtResource("1_0cjef")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("1_tqrii")
+
+[node name="Area2D" type="Area2D" parent="."]
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="Area2D"]
+polygon = PackedVector2Array(-14, -3, 0, -10, 14, -3, 0, 4)
+
+[node name="SelectedTile" parent="." instance=ExtResource("3_ypon3")]
+visible = false
+z_index = 1
+
+[node name="MovePosition" type="Sprite2D" parent="."]
+position = Vector2(0, -8)
+
+[connection signal="input_event" from="Area2D" to="." method="_on_area_2d_input_event"]
+[connection signal="mouse_entered" from="Area2D" to="." method="_on_area_2d_mouse_entered"]
+[connection signal="mouse_exited" from="Area2D" to="." method="_on_area_2d_mouse_exited"]

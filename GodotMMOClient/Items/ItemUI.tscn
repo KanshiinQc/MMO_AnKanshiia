@@ -1,0 +1,14 @@
+[gd_scene load_steps=2 format=3 uid="uid://ch62vj6eb2ack"]
+
+[ext_resource type="Texture2D" uid="uid://1jokc0hhioti" path="res://Items/Sprites/armor_01a.png" id="1_777dl"]
+
+[node name="Sprite2D" type="Sprite2D"]
+texture = ExtResource("1_777dl")
+
+[node name="Quantity" type="Label" parent="."]
+offset_left = -14.0
+offset_top = 2.0
+offset_right = 14.0
+offset_bottom = 25.0
+text = "1"
+horizontal_alignment = 1

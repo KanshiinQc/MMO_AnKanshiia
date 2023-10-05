@@ -1,0 +1,23 @@
+[gd_scene load_steps=3 format=3 uid="uid://d1wmuujhjr5ge"]
+
+[ext_resource type="Script" path="res://Fight/Fight1v1.gd" id="1_niobt"]
+
+[sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_dup1h"]
+properties/0/path = NodePath(".:player1ID")
+properties/0/spawn = true
+properties/0/sync = true
+properties/0/watch = false
+properties/1/path = NodePath(".:player2ID")
+properties/1/spawn = true
+properties/1/sync = true
+properties/1/watch = false
+properties/2/path = NodePath(".:currentTurnPlayerID")
+properties/2/spawn = true
+properties/2/sync = true
+properties/2/watch = false
+
+[node name="Fight1v1" type="Node"]
+script = ExtResource("1_niobt")
+
+[node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="."]
+replication_config = SubResource("SceneReplicationConfig_dup1h")

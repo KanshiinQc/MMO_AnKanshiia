@@ -1,0 +1,104 @@
+[gd_scene load_steps=2 format=3 uid="uid://ly1j0x47yd6u"]
+
+[ext_resource type="Script" path="res://Main/Login.gd" id="1_dfgh6"]
+
+[node name="Login" type="Control"]
+layout_direction = 1
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = -980.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_dfgh6")
+
+[node name="Username" type="LineEdit" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -33.5315
+offset_top = 10.5
+offset_right = 33.5315
+offset_bottom = 41.5
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Password" type="LineEdit" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -33.5315
+offset_top = 76.5
+offset_right = 33.5315
+offset_bottom = 107.5
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Label_Password" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -40.0
+offset_top = 53.5
+offset_right = 40.0
+offset_bottom = 76.5
+grow_horizontal = 2
+grow_vertical = 2
+text = "Password"
+horizontal_alignment = 1
+
+[node name="Label_Username" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -40.0
+offset_top = -11.5
+offset_right = 40.0
+offset_bottom = 11.5
+grow_horizontal = 2
+grow_vertical = 2
+text = "Username"
+horizontal_alignment = 1
+
+[node name="Button_Register" type="Button" parent="."]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 143.0
+offset_top = -245.0
+offset_right = 224.0
+offset_bottom = -214.0
+grow_vertical = 0
+text = "REGISTER"
+
+[node name="Button_Login" type="Button" parent="."]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 82.0
+offset_top = -245.0
+offset_right = 141.0
+offset_bottom = -214.0
+grow_vertical = 0
+text = "LOGIN
+"
+
+[connection signal="text_submitted" from="Username" to="." method="_on_username_text_submitted"]
+[connection signal="text_submitted" from="Password" to="." method="_on_password_text_submitted"]
+[connection signal="pressed" from="Button_Register" to="." method="_on_button_register_pressed"]
+[connection signal="pressed" from="Button_Login" to="." method="_on_button_login_pressed"]
