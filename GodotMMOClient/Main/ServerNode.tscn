@@ -1,6 +1,6 @@
 [gd_scene load_steps=7 format=3 uid="uid://clyb4fqrrcw1f"]
 
-[ext_resource type="Script" path="res://Main/Server.gd" id="1_hm4ce"]
+[ext_resource type="Script" path="res://Main/Server.cs" id="1_hm4ce"]
 [ext_resource type="PackedScene" uid="uid://dy2m8mvynu12i" path="res://Containers/PlayersContainer.tscn" id="3_b3dro"]
 [ext_resource type="PackedScene" uid="uid://chpmkc2ogvi5j" path="res://Maps/FightMapTM.tscn" id="3_werl0"]
 [ext_resource type="PackedScene" uid="uid://g5njh648ou6c" path="res://Containers/ResourcesContainer.tscn" id="4_jvjom"]

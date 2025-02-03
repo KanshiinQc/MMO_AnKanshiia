@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "CLIENT": {
+      "commandName": "Executable",
+      "executablePath": "C:\\Users\\KanshiinPC\\Desktop\\Godot_4.3_CSharp\\Godot_v4.3-stable_mono_win64.exe",
+      "workingDirectory": ".",
+      "nativeDebugging": true
+    }
+  }
+}

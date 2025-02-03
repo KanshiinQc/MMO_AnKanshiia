@@ -1,6 +1,6 @@
 [gd_scene load_steps=8 format=3 uid="uid://cohjj2mjuy476"]
 
-[ext_resource type="Script" path="res://Mining/Ore.gd" id="1_ru5tf"]
+[ext_resource type="Script" path="res://Mining/Ore.cs" id="1_ru5tf"]
 [ext_resource type="Texture2D" uid="uid://bx5s8eefuuv0t" path="res://Mining/Sprites/mining_ores.png" id="1_ue7d3"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_agb62"]
@@ -31,20 +31,16 @@ size = Vector2(10, 10)
 [sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_r7yt1"]
 properties/0/path = NodePath(".:position")
 properties/0/spawn = true
-properties/0/sync = false
-properties/0/watch = false
+properties/0/replication_mode = 0
 properties/1/path = NodePath("AnimatedSprite2D:animation")
 properties/1/spawn = true
-properties/1/sync = true
-properties/1/watch = false
+properties/1/replication_mode = 1
 properties/2/path = NodePath("AnimatedSprite2D:frame")
 properties/2/spawn = true
-properties/2/sync = true
-properties/2/watch = false
-properties/3/path = NodePath(".:networkUID")
+properties/2/replication_mode = 1
+properties/3/path = NodePath(".:NetworkUID")
 properties/3/spawn = true
-properties/3/sync = false
-properties/3/watch = false
+properties/3/replication_mode = 1
 
 [node name="Node2D" type="Node2D"]
 z_index = 2

@@ -1,6 +1,6 @@
 [gd_scene load_steps=4 format=3 uid="uid://cnnbsig7l72j3"]
 
-[ext_resource type="Script" path="res://Fight/FightTile.gd" id="1_fwcak"]
+[ext_resource type="Script" path="res://Fight/FightTile.cs" id="1_fwcak"]
 [ext_resource type="Texture2D" uid="uid://rdmd2bukut6u" path="res://WorldTiles/IsoTiles/tile006.png" id="2_5ltt5"]
 [ext_resource type="PackedScene" uid="uid://bfggsdyakb6fo" path="res://GUI/SelectedTile.tscn" id="3_xydhg"]
 

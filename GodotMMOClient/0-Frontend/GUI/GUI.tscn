@@ -1,8 +1,8 @@
 [gd_scene load_steps=11 format=3 uid="uid://cwwbx0kpom6aj"]
 
-[ext_resource type="Script" path="res://0-Frontend/GUI/GUI.gd" id="1_mdt8w"]
-[ext_resource type="PackedScene" uid="uid://ly1j0x47yd6u" path="res://Main/Login.tscn" id="2_vlwbg"]
-[ext_resource type="Script" path="res://0-Frontend/GUI/ChatBox.gd" id="2_xncc3"]
+[ext_resource type="Script" path="res://0-Frontend/GUI/GUI.cs" id="1_mdt8w"]
+[ext_resource type="PackedScene" uid="uid://ly1j0x47yd6u" path="res://0-Frontend/GUI/Login.tscn" id="2_vlwbg"]
+[ext_resource type="Script" path="res://0-Frontend/GUI/ChatBox.cs" id="2_xncc3"]
 [ext_resource type="Texture2D" uid="uid://c0dl1twyxe575" path="res://0-Frontend/GUI/Sprites/frame_0_delay-0.1s.png" id="4_40pr1"]
 [ext_resource type="Texture2D" uid="uid://dikcc0ptpr73w" path="res://0-Frontend/GUI/Sprites/frame_1_delay-0.1s.png" id="5_xc8ux"]
 [ext_resource type="Texture2D" uid="uid://325mue81xmch" path="res://0-Frontend/GUI/Sprites/frame_2_delay-0.1s.png" id="6_vhdue"]
