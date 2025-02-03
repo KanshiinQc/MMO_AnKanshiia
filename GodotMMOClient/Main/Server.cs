@@ -1,29 +1,16 @@
 using Godot;
 using System.Collections.Generic;
 using System.Linq;
-using CLIENT.Interfaces;
-using CLIENT.Managers;
-using CLIENT.Services;
-using CLIENT.Constants;
 
 namespace CLIENT
 {
-    /// <summary>
-    /// Main server node that handles network communication and game state
-    /// </summary>
     public partial class Server : Node
     {
-        #region Variables - Dependencies
-        private readonly ILogger _logger;
-        private IFightStateManager _fightManager;
-        private ILootSystem _lootSystem;
-        private IConnectionManager _connectionManager;
-        #endregion
-
         #region Variables - Networking
         private ENetMultiplayerPeer _network = new();
-        private string _ip = GameConstants.Network.LOCAL_IP;
-        private int _port = GameConstants.Network.PORT;
+        //private string _ip = "170.187.179.212";
+        private string _ip = "127.0.0.1";
+        private int _port = 1909;
         #endregion
 
         #region Variables - Node References
@@ -43,129 +30,69 @@ namespace CLIENT
         private Dictionary<int, string> _itemSprites = new();
         #endregion
 
-        public Server()
-        {
-            _logger = new GodotLogger();
-        }
-
         #region Initialization
         public override void _Ready()
-        {
-            try
-            {
-                InitializeNodeReferences();
-                InitializeDependencies();
-                LoadItemSprites();
-                LoadGUI();
-                _connectionManager.Connect();
-            }
-            catch (System.Exception ex)
-            {
-                _logger.LogError($"Error during initialization: {ex.Message}");
-                throw;
-            }
-        }
-
-        private void InitializeNodeReferences()
         {
             _playersContainer = GetNode<Node2D>("PlayersContainer");
             _resourcesContainer = GetNode<Node2D>("ResourcesContainer");
             _fightsContainer = GetNode<Node2D>("FightsContainer");
             _worldMapNode = GetNode<Node2D>("WorldMap");
             _fightMapNode = GetNode<Node2D>("FightMap");
-        }
 
-        private void InitializeDependencies()
-        {
-            _fightManager = new FightStateManager(
-                _worldMapNode,
-                _fightMapNode,
-                _resourcesContainer,
-                _guiNode,
-                GetViewport().GetCamera2D(),
-                _logger
-            );
-
-            _lootSystem = new LootSystem(
-                _itemSprites,
-                _guiNode,
-                _logger
-            );
-
-            _connectionManager = new ConnectionManager(
-                _network,
-                _ip,
-                _port,
-                _guiNode,
-                NotifyPlayer,
-                _logger,
-                this
-            );
+            LoadItemSprites();
+            LoadGUI();
+            ConnectToServer();
         }
 
         private void LoadItemSprites()
         {
-            try
+            int number = 0;
+            foreach (string filePath in DirAccess.GetFilesAt("res://Items/Sprites"))
             {
-                int number = 0;
-                foreach (string filePath in DirAccess.GetFilesAt(GameConstants.ResourcePaths.ITEMS_SPRITES_PATH))
+                if (filePath.GetExtension() == "png")
                 {
-                    if (filePath.GetExtension() == "png")
-                    {
-                        _itemSprites[number] = $"{GameConstants.ResourcePaths.ITEMS_SPRITES_PATH}/{filePath.GetFile()}";
-                        number++;
-                    }
+                    _itemSprites[number] = $"res://Items/Sprites/{filePath.GetFile()}";
+                    number++;
                 }
-            }
-            catch (System.Exception ex)
-            {
-                _logger.LogError($"Error loading item sprites: {ex.Message}");
-                throw;
             }
         }
 
         private void LoadGUI()
         {
-            try
-            {
-                var guiStart = GD.Load<PackedScene>(GameConstants.ResourcePaths.GUI_SCENE);
-                _guiNode = guiStart.Instantiate() as GUI;
-                GetTree().Root.CallDeferred("add_child", _guiNode, true);
-                _loginNode = _guiNode.GetNode<Login>("Login");
-                
-                // Update all manager GUI references after initialization
-                if (_connectionManager != null)
-                {
-                    _connectionManager.UpdateGuiReference(_guiNode);
-                }
-                else
-                {
-                    _logger.LogWarning("ConnectionManager not initialized when loading GUI");
-                }
+            var guiStart = GD.Load<PackedScene>("res://0-Frontend/GUI/GUI.tscn");
+            _guiNode = guiStart.Instantiate() as GUI;
+            GetTree().Root.CallDeferred("add_child", _guiNode, true);
+            _loginNode = _guiNode.GetNode<Login>("Login");
+        }
+        #endregion
 
-                if (_fightManager != null)
-                {
-                    _fightManager.UpdateGuiReference(_guiNode);
-                }
-                else
-                {
-                    _logger.LogWarning("FightManager not initialized when loading GUI");
-                }
-
-                if (_lootSystem != null)
-                {
-                    _lootSystem.UpdateGuiReference(_guiNode);
-                }
-                else
-                {
-                    _logger.LogWarning("LootSystem not initialized when loading GUI");
-                }
-            }
-            catch (System.Exception ex)
+        #region Connection Handling
+        private void ConnectToServer()
+        {
+            NotifyPlayer("Attempting to connect to server. Please wait...");
+            var error = _network.CreateClient(_ip, _port);
+            if (error != Error.Ok)
             {
-                _logger.LogError($"Error loading GUI: {ex.Message}");
-                throw;
+                GD.PrintErr($"Failed to create client: {error}");
+                _OnConnectionFailed();
+                return;
             }
+            Multiplayer.MultiplayerPeer = _network;
+            Multiplayer.ConnectedToServer += _OnConnectionSucceeded;
+            Multiplayer.ConnectionFailed += _OnConnectionFailed;
+            GD.Print($"Attempting to connect to {_ip}:{_port}");
+        }
+
+        private void _OnConnectionFailed()
+        {
+            _guiNode.HideLoading();
+            NotifyPlayer("Could not connect to server. Is it down?");
+        }
+
+        private void _OnConnectionSucceeded()
+        {
+            _guiNode.HideLoading();
+            NotifyPlayer("Connected to server successfully. You can now log in");
         }
         #endregion
 
@@ -173,24 +100,18 @@ namespace CLIENT
         [Rpc(MultiplayerApi.RpcMode.AnyPeer)]
         public void AutomaticallyConnectPeer(long playerId, string username)
         {
-            try
+            string password = "defaultpass123";
+            if (_loginNode == null)
             {
-                if (_loginNode == null)
-                {
-                    CallDeferred("AutomaticallyConnectPeer", playerId, username);
-                    return;
-                }
-
-                _loginNode.Username = username;
-                _loginNode.Password = GameConstants.Network.DEFAULT_PASSWORD;
-
-                _logger.Log($"Attempting automatic login for user: {username}");
-                SendLoginRequest(username, GameConstants.Network.DEFAULT_PASSWORD);
+                CallDeferred("AutomaticallyConnectPeer", playerId, username);
+                return;
             }
-            catch (System.Exception ex)
-            {
-                _logger.LogError($"Error in automatic peer connection: {ex.Message}");
-            }
+
+            _loginNode.Username = username;
+            _loginNode.Password = password;
+
+            GD.Print($"Attempting automatic login for user: {username}");
+            SendLoginRequest(username, password);
         }
 
         [Rpc(MultiplayerApi.RpcMode.AnyPeer)]
@@ -208,18 +129,11 @@ namespace CLIENT
         [Rpc(MultiplayerApi.RpcMode.AnyPeer)]
         public void LoginSuccess(string message)
         {
-            try
-            {
-                ConnectPlayer();
-                MakeGameWorldObjectsVisible();
-                SetupChatBoxUI();
-                SetupPlayerUI();
-                NotifyPlayer(message);
-            }
-            catch (System.Exception ex)
-            {
-                _logger.LogError($"Error in login success: {ex.Message}");
-            }
+            ConnectPlayer();
+            MakeGameWorldObjectsVisible();
+            SetupChatBoxUI();
+            SetupPlayerUI();
+            NotifyPlayer(message);
         }
 
         [Rpc(MultiplayerApi.RpcMode.AnyPeer)]
@@ -277,14 +191,20 @@ namespace CLIENT
         [Rpc(MultiplayerApi.RpcMode.AnyPeer)]
         public void StartFightWithPlayer()
         {
-            try
+            _worldMapNode.Visible = !_worldMapNode.Visible;
+            _worldMapNode.SetProcess(!_worldMapNode.IsProcessing());
+            _fightMapNode.Visible = !_fightMapNode.Visible;
+            _fightMapNode.SetProcess(!_fightMapNode.IsProcessing());
+            GetViewport().GetCamera2D().Zoom = new Vector2(3, 3);
+
+            foreach (Node resource in _resourcesContainer.GetChildren())
             {
-                _fightManager.StartFight();
+                if (resource is Ore ore)
+                {
+                    ore.Visible = false;
+                }
             }
-            catch (System.Exception ex)
-            {
-                _logger.LogError($"Error starting fight: {ex.Message}");
-            }
+            _guiNode.ShowFightTurns();
         }
 
         [Rpc(MultiplayerApi.RpcMode.AnyPeer)]
@@ -302,27 +222,47 @@ namespace CLIENT
         [Rpc(MultiplayerApi.RpcMode.AnyPeer)]
         public void TerminateFight(Vector2 playerInitialPosition)
         {
-            try
+            _worldMapNode.Visible = !_worldMapNode.Visible;
+            _worldMapNode.SetProcess(!_worldMapNode.IsProcessing());
+            _fightMapNode.Visible = !_fightMapNode.Visible;
+            _fightMapNode.SetProcess(!_fightMapNode.IsProcessing());
+            GetViewport().GetCamera2D().Zoom = new Vector2(4, 4);
+
+            foreach (Node resource in _resourcesContainer.GetChildren())
             {
-                var player = GetLocalPlayer();
-                _fightManager.EndFight(playerInitialPosition, player);
+                if (resource is Ore ore)
+                {
+                    ore.Visible = true;
+                }
             }
-            catch (System.Exception ex)
-            {
-                _logger.LogError($"Error terminating fight: {ex.Message}");
-            }
+
+            var player = GetLocalPlayer();
+            player.Position = playerInitialPosition;
+            _guiNode.HideFightTurns();
         }
 
         [Rpc(MultiplayerApi.RpcMode.AnyPeer)]
         public void ShowLoot(Dictionary<int, int> lootDictionary)
         {
-            try
+            _guiNode.ShowLootWindow();
+            
+            var keys = lootDictionary.Keys.ToArray();
+            var values = lootDictionary.Values.ToArray();
+            
+            for (int i = 0; i < lootDictionary.Count; i++)
             {
-                _lootSystem.DisplayLoot(lootDictionary);
-            }
-            catch (System.Exception ex)
-            {
-                _logger.LogError($"Error showing loot: {ex.Message}");
+                var itemUIScene = GD.Load<PackedScene>("res://Items/ItemUI.tscn");
+                var lootImage = itemUIScene.Instantiate<Sprite2D>();
+                lootImage.Scale = new Vector2(4, 4);
+                lootImage.Position = new Vector2(i * 64, 0);
+
+                var imageLoad = GD.Load<Texture2D>(_itemSprites[keys[i]]);
+                lootImage.Texture = imageLoad;
+
+                var label = lootImage.GetNode<Label>("Quantity");
+                label.Text = values[i].ToString();
+
+                _guiNode.AddLootItem(lootImage);
             }
         }
         #endregion
@@ -390,15 +330,12 @@ namespace CLIENT
                     return playerCharacter;
                 }
             }
-            _logger.LogWarning("Local player not found");
             return null;
         }
 
         private Fight1v1 GetLocalPlayerFight()
         {
             var localPlayer = GetLocalPlayer();
-            if (localPlayer == null) return null;
-
             foreach (Node fight in _fightsContainer.GetChildren())
             {
                 if (fight is Fight1v1 fight1v1)
@@ -421,7 +358,6 @@ namespace CLIENT
                     return playerCharacter;
                 }
             }
-            _logger.LogWarning($"Player with ID {playerId} not found");
             return null;
         }
         #endregion

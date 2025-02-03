@@ -1,4 +1,3 @@
-using CLIENT;
 using Godot;
 
 public partial class ServerAccessor : Node
