@@ -3,13 +3,13 @@
 [ext_resource type="Script" path="res://Fight/Fight1v1.cs" id="1_erj0e"]
 
 [sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_k4nd0"]
-properties/0/path = NodePath(".:player1ID")
+properties/0/path = NodePath(".:Player1Id")
 properties/0/spawn = true
 properties/0/replication_mode = 1
-properties/1/path = NodePath(".:player2ID")
+properties/1/path = NodePath(".:Player2Id")
 properties/1/spawn = true
 properties/1/replication_mode = 1
-properties/2/path = NodePath(".:currentTurnPlayerID")
+properties/2/path = NodePath(".:CurrentTurnPlayerId")
 properties/2/spawn = true
 properties/2/replication_mode = 1
 

@@ -25,4 +25,3 @@ visible = false
 y_sort_enabled = true
 
 [node name="FightsContainer" parent="." instance=ExtResource("6_4oqe3")]
-y_sort_enabled = true

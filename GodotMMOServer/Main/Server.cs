@@ -36,10 +36,12 @@ namespace SERVER
         private PackedScene _playerScene;
         private PackedScene _worldMapScene;
         private PackedScene _oreScene;
+        private PackedScene _fightScene;
         #endregion
 
         #region Variables - Player Usernames
         private Dictionary<long, string> _playerUsernames = new();
+        private HashSet<string> _usedUsernames = new HashSet<string>();
         #endregion
 
         #region Server Setup & Start
@@ -51,6 +53,7 @@ namespace SERVER
             _playerScene = GD.Load<PackedScene>("res://Player/PlayerCharacter.tscn");
             _worldMapScene = GD.Load<PackedScene>("res://Maps/WorldMap.tscn");
             _oreScene = GD.Load<PackedScene>("res://Mining/Ore.tscn");
+            _fightScene = GD.Load<PackedScene>("res://Fight/Fight1v1.tscn");
 
             _network.PeerConnected += OnPeerConnected;
             _network.PeerDisconnected += OnPeerDisconnected;
@@ -135,17 +138,27 @@ namespace SERVER
         {
             var test = _network.GetPeer((int)playerId);
             string username;
-            if (_connectedPlayersCount == 0)
-                username = "Paul";
-            else if (_connectedPlayersCount == 1)
-                username = "Jonathan";
-            else if (_connectedPlayersCount == 2)
-                username = "Michael";
-            else if (_connectedPlayersCount == 3)
-                username = "Blanche";
-            else
-                username = $"Player{_connectedPlayersCount + 1}";
 
+            // List of predefined usernames
+            var availableNames = new[] { "Paul", "Jonathan", "Michael", "Blanche" };
+            
+            // Find the first unused name
+            username = availableNames.FirstOrDefault(name => !_usedUsernames.Contains(name));
+            
+            // If all predefined names are used, create a generic one
+            if (username == null)
+            {
+                username = $"Player{_connectedPlayersCount + 1}";
+            }
+
+            // Mark the username as used
+            _usedUsernames.Add(username);
+            
+            // Store the username for this player ID
+            _playerUsernames[playerId] = username;
+
+            GD.Print($"Player {playerId} connected with username: {username}");
+            
             // Use CallDeferred to ensure the peer is fully registered before sending RPCs
             CallDeferred("DeferredAutomaticConnect", playerId, username);
         }
@@ -174,6 +187,13 @@ namespace SERVER
             var player = _playersContainer.GetNode<PlayerCharacter>(playerId.ToString());
             if (player != null)
             {
+                // Free up the username when player disconnects
+                if (_playerUsernames.TryGetValue(playerId, out string username))
+                {
+                    _usedUsernames.Remove(username);
+                    _playerUsernames.Remove(playerId);
+                }
+
                 _service.SaveUserData(player);
                 _connectedPeers.Remove(player);
                 player.QueueFree();
@@ -298,10 +318,93 @@ namespace SERVER
         
         #region Fights
         [Rpc(MultiplayerApi.RpcMode.AnyPeer)]
-        public void RequestFightWithPlayer(int playerId) { }
+        public void RequestFightWithPlayer(int targetPlayerId)
+        {
+            var requesterId = (int)Multiplayer.GetRemoteSenderId();
+            var requesterPlayer = GetPlayerById(requesterId);
+            var targetPlayer = GetPlayerById(targetPlayerId);
+
+            GD.Print($"Fight requested: Requester ID {requesterId} ({requesterPlayer?.Username}), Target ID {targetPlayerId} ({targetPlayer?.Username})");
+
+            // Check if players exist
+            if (requesterPlayer == null || targetPlayer == null)
+            {
+                GD.PrintErr($"Could not find one of the players for fight. Requester: {requesterId}, Target: {targetPlayerId}");
+                RpcId(requesterId, "NotifyPlayer", "Could not start fight - player not found");
+                return;
+            }
+
+            // Check if either player is already in a fight
+            if (requesterPlayer.IsFighting || targetPlayer.IsFighting)
+            {
+                RpcId(requesterId, "NotifyPlayer", "One of the players is already in a fight!");
+                return;
+            }
+
+            // Create a new fight instance using the scene
+            var fightInstance = _fightScene.Instantiate<Fight1v1>();
+            fightInstance.Player1Id = requesterId;
+            fightInstance.Player2Id = targetPlayerId;
+            fightInstance.Player1PositionBeforeFight = requesterPlayer.Position;
+            fightInstance.Player2PositionBeforeFight = targetPlayer.Position;
+            
+            _fightInstances.Add(fightInstance);
+            _fightsContainer.AddChild(fightInstance, true);
+
+            // Set both players' fighting status
+            requesterPlayer.IsFighting = true;
+            targetPlayer.IsFighting = true;
+
+            // Notify all other players that these players are in a fight
+            foreach (var player in _connectedPeers)
+            {
+                if (player.PeerID != requesterId && player.PeerID != targetPlayerId)
+                {
+                    RpcId(player.PeerID, "RemovePlayerFromWorld", requesterId);
+                    RpcId(player.PeerID, "RemovePlayerFromWorld", targetPlayerId);
+                }
+            }
+
+            // Send fight participant information to both players
+            RpcId(requesterId, "StartFightWithPlayer", new int[] { requesterId, targetPlayerId });
+            RpcId(targetPlayerId, "StartFightWithPlayer", new int[] { requesterId, targetPlayerId });
+
+            // Notify both players
+            RpcId(requesterId, "NotifyPlayer", $"Starting fight with {targetPlayer.Username}!");
+            RpcId(targetPlayerId, "NotifyPlayer", $"{requesterPlayer.Username} has challenged you to a fight!");
+
+            // Set initial turn
+            string firstPlayerName = requesterPlayer.Username;
+            RpcId(requesterId, "UpdateFightTurn", firstPlayerName);
+            RpcId(targetPlayerId, "UpdateFightTurn", firstPlayerName);
+
+            // Create a timer to end the fight after 3 seconds
+            var timer = new Timer();
+            AddChild(timer);
+            timer.WaitTime = 3.0;
+            timer.OneShot = true;
+            timer.Timeout += () =>
+            {
+                GD.Print($"Server timer: Ending fight between {requesterPlayer.Username} and {targetPlayer.Username}");
+                var fightId = (int)fightInstance.GetInstanceId();
+                GD.Print($"Server timer: Fight ID is {fightId}");
+                EndFight(fightId);
+                timer.QueueFree();
+            };
+            timer.Start();
+        }
 
         [Rpc(MultiplayerApi.RpcMode.AnyPeer)]
-        public void StartFightWithPlayer() { }
+        public void RemovePlayerFromWorld(int playerId) { }
+
+        [Rpc(MultiplayerApi.RpcMode.AnyPeer)]
+        public void AddPlayerToWorld(int playerId) { }
+
+        [Rpc(MultiplayerApi.RpcMode.AnyPeer)]
+        public void StartFightWithPlayer(int[] fightParticipantIds)
+        {
+            // ... existing implementation ...
+        }
 
         [Rpc(MultiplayerApi.RpcMode.AnyPeer)]
         public void AttackTile(float positionX, float positionY) { }
@@ -314,6 +417,58 @@ namespace SERVER
 
         [Rpc(MultiplayerApi.RpcMode.AnyPeer)]
         public void ShowLoot(Dictionary<int, int> lootDictionary) { }
+
+        [Rpc(MultiplayerApi.RpcMode.AnyPeer)]
+        public void EndFight(int fightId)
+        {
+            GD.Print($"Server EndFight: Looking for fight with ID {fightId}");
+            
+            // Find the fight by its instance ID
+            var fight = _fightInstances.FirstOrDefault(f => (int)f.GetInstanceId() == fightId);
+            
+            if (fight == null)
+            {
+                GD.PrintErr($"Server EndFight: No fight found with ID {fightId}");
+                return;
+            }
+
+            GD.Print($"Server EndFight: Found fight - P1: {fight.Player1Id}, P2: {fight.Player2Id}");
+            
+            var player1 = GetPlayerById(fight.Player1Id);
+            var player2 = GetPlayerById(fight.Player2Id);
+
+            // Re-enable world map processing for both players
+            player1?.SetProcess(true);
+            player2?.SetProcess(true);
+
+            // Reset fighting status
+            if (player1 != null) player1.IsFighting = false;
+            if (player2 != null) player2.IsFighting = false;
+
+            // Notify all other players that these players are back
+            foreach (var player in _connectedPeers)
+            {
+                if (player.PeerID != fight.Player1Id && player.PeerID != fight.Player2Id)
+                {
+                    RpcId(player.PeerID, "AddPlayerToWorld", fight.Player1Id);
+                    RpcId(player.PeerID, "AddPlayerToWorld", fight.Player2Id);
+                }
+            }
+
+            // Return players to their original positions
+            RpcId(fight.Player1Id, "TerminateFight", fight.Player1PositionBeforeFight);
+            RpcId(fight.Player2Id, "TerminateFight", fight.Player2PositionBeforeFight);
+
+            // Tell all clients to clean up the fight instance
+            foreach (var player in _connectedPeers)
+            {
+                RpcId(player.PeerID, "EndFight", fightId);
+            }
+
+            // Clean up the fight instance on the server
+            _fightInstances.Remove(fight);
+            fight.QueueFree();
+        }
         #endregion
 
         #region Chat & Notifications
