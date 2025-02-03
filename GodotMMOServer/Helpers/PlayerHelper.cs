@@ -17,6 +17,7 @@ namespace SERVER.Helpers
             playerObject.ID = user.ID;
             playerObject.Name = playerID.ToString();
             playerObject.PeerID = playerID;
+            playerObject.Username = user.Username;
 
             playerObject.Position = new Vector2(
                 user.PlayerDisconnectedAtPosX,

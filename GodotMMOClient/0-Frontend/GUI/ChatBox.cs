@@ -14,6 +14,9 @@ public partial class ChatBox : VBoxContainer
         _chatLog = GetNode<RichTextLabel>("RichTextLabel");
         _inputLabel = GetNode<Label>("HBoxContainer/Label");
         _inputField = GetNode<LineEdit>("HBoxContainer/LineEdit");
+        
+        // Connect the text submitted signal
+        _inputField.TextSubmitted += OnLineEditTextSubmitted;
     }
 
     public override void _Input(InputEvent @event)

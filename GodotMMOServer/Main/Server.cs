@@ -38,6 +38,10 @@ namespace SERVER
         private PackedScene _oreScene;
         #endregion
 
+        #region Variables - Player Usernames
+        private Dictionary<long, string> _playerUsernames = new();
+        #endregion
+
         #region Server Setup & Start
         public Server()
         {
@@ -125,8 +129,6 @@ namespace SERVER
                 _service.CreateUser(username, password);
                 RpcId(playerId, "AutomaticallyConnectPeer", playerId, username);
             }
-            
-            _connectedPlayersCount++;
         }
 
         private void OnPeerConnected(long playerId)
@@ -183,21 +185,11 @@ namespace SERVER
         public void ConnectPlayer()
         {
             var playerId = Multiplayer.GetRemoteSenderId();
-
-            string username;
-            if (_connectedPlayersCount == 0)
-                username = "Paul";
-            else if (_connectedPlayersCount == 1)
-                username = "Jonathan";
-            else if (_connectedPlayersCount == 2)
-                username = "Michael";
-            else if (_connectedPlayersCount == 3)
-                username = "Blanche";
-            else
-                username = $"Player{_connectedPlayersCount + 1}";
-
-            var user = _service.GetUserByUsername(username);
             
+            // Get the username that was used during login
+            string username = _playerUsernames.GetValueOrDefault(playerId, $"Player{_connectedPlayersCount + 1}");
+            
+            var user = _service.GetUserByUsername(username);
             var playerInstance = PlayerHelper.ConstructPlayerInstance(playerId, user, _playerScene);
             _connectedPeers.Add(playerInstance);
             _playersContainer.AddChild(playerInstance, true);
@@ -211,6 +203,8 @@ namespace SERVER
 
             if (true/*_service.ValidateCredentials(username, password)*/)
             {
+                // Store the username for this player
+                _playerUsernames[playerId] = username;
                 RpcId(playerId, "LoginSuccess", "Login successful!");
             }
             else
@@ -272,11 +266,6 @@ namespace SERVER
             {
                 var newPosition = new Vector2(xPos, yPos);
                 player.SetTargetPosition(newPosition);
-                
-                foreach (var peer in _connectedPeers.Where(p => p.PeerID != playerId))
-                {
-                    RpcId(peer.PeerID, "MovePlayer", xPos, yPos);
-                }
             }
         }
 
