@@ -30,6 +30,11 @@ window/vsync/vsync_mode=0
 
 project/assembly_name="CLIENT"
 
+[editor]
+
+movie_writer/disable_vsync=true
+movie_writer/fps=170
+
 [input]
 
 mouse_left_click={

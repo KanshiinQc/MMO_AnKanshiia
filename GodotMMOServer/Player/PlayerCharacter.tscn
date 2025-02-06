@@ -309,12 +309,12 @@ properties/8/path = NodePath(".:ID")
 properties/8/spawn = true
 properties/8/replication_mode = 1
 
-[node name="Player" type="CharacterBody2D"]
-z_index = 2
+[node name="PlayerCharacter" type="CharacterBody2D"]
 y_sort_enabled = true
 script = ExtResource("1_3ugm4")
 
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+y_sort_enabled = true
 sprite_frames = SubResource("SpriteFrames_kygl2")
 animation = &"WALK_D"
 

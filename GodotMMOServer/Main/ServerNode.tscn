@@ -1,11 +1,13 @@
-[gd_scene load_steps=5 format=3 uid="uid://csw0vfgc0mfs5"]
+[gd_scene load_steps=6 format=3 uid="uid://csw0vfgc0mfs5"]
 
 [ext_resource type="Script" path="res://Main/Server.cs" id="1_0nk6y"]
 [ext_resource type="PackedScene" uid="uid://d25bec4dc05tn" path="res://Containers/PlayersContainer.tscn" id="2_p3t3q"]
 [ext_resource type="PackedScene" uid="uid://bss8w665xw3tx" path="res://Containers/ResourcesContainer.tscn" id="3_35em0"]
 [ext_resource type="PackedScene" uid="uid://drc0fccq3me8t" path="res://Containers/FightsContainer.tscn" id="4_8lgbm"]
+[ext_resource type="PackedScene" uid="uid://b4yvxvxpxqxxx" path="res://Containers/MobsContainer.tscn" id="5_mobxx"]
 
-[node name="ServerNode" type="Node"]
+[node name="ServerNode" type="Node2D"]
+y_sort_enabled = true
 script = ExtResource("1_0nk6y")
 
 [node name="PlayersContainer" parent="." instance=ExtResource("2_p3t3q")]
@@ -13,3 +15,5 @@ script = ExtResource("1_0nk6y")
 [node name="ResourcesContainer" parent="." instance=ExtResource("3_35em0")]
 
 [node name="FightsContainer" parent="." instance=ExtResource("4_8lgbm")]
+
+[node name="MobsContainer" parent="." instance=ExtResource("5_mobxx")]

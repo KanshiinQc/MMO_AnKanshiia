@@ -1,6 +1,6 @@
 [gd_scene load_steps=13 format=3 uid="uid://cacx8jcb0j30h"]
 
-[ext_resource type="Texture2D" uid="uid://dikhqnru31kfy" path="res://Mobs/Sprites/IsometricTRPGAssetPack_Entities.png" id="1_26ekg"]
+[ext_resource type="Texture2D" uid="uid://ettsu6lg0i0u" path="res://Mobs/Sprites/IsometricTRPGAssetPack_Entities.png" id="1_26ekg"]
 [ext_resource type="Script" path="res://Mobs/Mob.cs" id="1_xwlvn"]
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_63n8n"]
@@ -91,6 +91,8 @@ script = ExtResource("1_xwlvn")
 y_sort_enabled = true
 sprite_frames = SubResource("SpriteFrames_mii1k")
 animation = &"ATTACK_UP"
+frame = 1
+frame_progress = 0.397453
 
 [node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="."]
 replication_config = SubResource("SceneReplicationConfig_dcxq1")

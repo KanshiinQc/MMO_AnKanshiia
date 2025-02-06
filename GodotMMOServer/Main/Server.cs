@@ -26,10 +26,11 @@ namespace SERVER
         #endregion
 
         #region Variables - NodeContainers
-        private Node _playersContainer;
-        private Node _resourcesContainer;
-        private Node _fightsContainer;
-        private Node _worldMap;
+        private Node2D _playersContainer;
+        private Node2D _resourcesContainer;
+        private Node2D _fightsContainer;
+        private Node2D _mobsContainer;
+        private Node2D _worldMap;
         #endregion
 
         #region Variables - Scenes
@@ -37,6 +38,7 @@ namespace SERVER
         private PackedScene _worldMapScene;
         private PackedScene _oreScene;
         private PackedScene _fightScene;
+        private PackedScene _mobScene;
         #endregion
 
         #region Variables - Player Usernames
@@ -54,6 +56,7 @@ namespace SERVER
             _worldMapScene = GD.Load<PackedScene>("res://Maps/WorldMap.tscn");
             _oreScene = GD.Load<PackedScene>("res://Mining/Ore.tscn");
             _fightScene = GD.Load<PackedScene>("res://Fight/Fight1v1.tscn");
+            _mobScene = GD.Load<PackedScene>("res://Mobs/Mob.tscn");
 
             _network.PeerConnected += OnPeerConnected;
             _network.PeerDisconnected += OnPeerDisconnected;
@@ -61,9 +64,12 @@ namespace SERVER
 
         public override void _Ready()
         {
-            _playersContainer = GetNode<Node>("PlayersContainer");
-            _resourcesContainer = GetNode<Node>("ResourcesContainer");
-            _fightsContainer = GetNode<Node>("FightsContainer");
+            _playersContainer = GetNode<Node2D>("PlayersContainer");
+            _resourcesContainer = GetNode<Node2D>("ResourcesContainer");
+            _fightsContainer = GetNode<Node2D>("FightsContainer");
+            _mobsContainer = GetNode<Node2D>("MobsContainer");
+            _worldMap = _worldMapScene.Instantiate() as Node2D;
+            _worldMap.Visible = false;
 
             StartServer();
         }
@@ -90,7 +96,6 @@ namespace SERVER
 
         private void SpawnWorldMap()
         {
-            _worldMap = _worldMapScene.Instantiate();
             AddChild(_worldMap, true);
         }
 
@@ -502,5 +507,13 @@ namespace SERVER
             return _connectedPeers.FirstOrDefault(player => player.PeerID == playerId);
         }
         #endregion
+
+        [Rpc(MultiplayerApi.RpcMode.AnyPeer)]
+        public void SpawnMob(Vector2 position)
+        {
+            var mobInstance = _mobScene.Instantiate<Node2D>();
+            mobInstance.Position = position;
+            _mobsContainer.AddChild(mobInstance, true);
+        }
     }
 } 

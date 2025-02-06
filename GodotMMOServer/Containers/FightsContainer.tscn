@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://drc0fccq3me8t"]
 
-[node name="FightsContainer" type="Node"]
+[node name="FightsContainer" type="Node2D"]
 
 [node name="MultiplayerSpawner" type="MultiplayerSpawner" parent="."]
 _spawnable_scenes = PackedStringArray("res://Fight/Fight1v1.tscn")

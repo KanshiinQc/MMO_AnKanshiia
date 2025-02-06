@@ -1,0 +1,8 @@
+[gd_scene format=3 uid="uid://b4yvxvxpxqxxx"]
+
+[node name="MobsContainer" type="Node2D"]
+y_sort_enabled = true
+
+[node name="MultiplayerSpawner" type="MultiplayerSpawner" parent="."]
+_spawnable_scenes = PackedStringArray("res://Mobs/Mob.tscn")
+spawn_path = NodePath("..")

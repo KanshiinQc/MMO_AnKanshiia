@@ -17,6 +17,7 @@ namespace CLIENT
         private Node2D _playersContainer;
         private Node2D _resourcesContainer;
         private Node2D _fightsContainer;
+        private Node2D _mobsContainer;
         private Node2D _worldMapNode;
         private Node2D _fightMapNode;
         #endregion
@@ -37,6 +38,7 @@ namespace CLIENT
             _playersContainer = GetNode<Node2D>("PlayersContainer");
             _resourcesContainer = GetNode<Node2D>("ResourcesContainer");
             _fightsContainer = GetNode<Node2D>("FightsContainer");
+            _mobsContainer = GetNode<Node2D>("MobsContainer");
             _worldMapNode = GetNode<Node2D>("WorldMap");
             _fightMapNode = GetNode<Node2D>("FightMap");
 
@@ -460,6 +462,7 @@ namespace CLIENT
             _worldMapNode.Visible = true;
             _playersContainer.Visible = true;
             _resourcesContainer.Visible = true;
+            _mobsContainer.Visible = true;
         }
         #endregion
 
@@ -541,5 +544,34 @@ namespace CLIENT
             return null;
         }
         #endregion
+
+        #region Mob Management
+        public void RequestSpawnMob(Vector2 position)
+        {
+            RpcId(1, "SpawnMob", position);
+        }
+
+        [Rpc(MultiplayerApi.RpcMode.AnyPeer)]
+        public void SpawnMob(Vector2 position)
+        {
+            // Client doesn't need to implement the logic as MultiplayerSpawner handles it
+        }
+        #endregion
+
+        public override void _Input(InputEvent @event)
+        {
+            if (@event is InputEventKey eventKey)
+            {
+                if (eventKey.Pressed && eventKey.Keycode == Key.S)
+                {
+                    // Generate random position and spawn mob
+                    var random = new RandomNumberGenerator();
+                    random.Randomize();
+                    float x = random.RandfRange(10, 200);
+                    float y = random.RandfRange(10, 200);
+                    RequestSpawnMob(new Vector2(x, y));
+                }
+            }
+        }
     }
 } 

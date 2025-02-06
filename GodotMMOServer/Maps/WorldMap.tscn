@@ -17,6 +17,7 @@ custom_data_layer_0/type = 1
 sources/1 = SubResource("TileSetAtlasSource_r8810")
 
 [node name="WorldMap" type="Node2D"]
+z_index = -1
 y_sort_enabled = true
 
 [node name="TileMap" type="TileMap" parent="."]

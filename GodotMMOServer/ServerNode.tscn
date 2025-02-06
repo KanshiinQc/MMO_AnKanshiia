@@ -1,0 +1,19 @@
+[gd_scene load_steps=7 format=3 uid="uid://bfbx4cef0kf0b"]
+
+[node name="ServerNode" type="Node2D"]
+y_sort_enabled = true
+script = ExtResource("1_0nk6y")
+
+[node name="PlayersContainer" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="ResourcesContainer" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="MobsContainer" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="FightsContainer" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="WorldMap" parent="." instance=ExtResource("7_62rvs")] 
