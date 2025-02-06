@@ -3,5 +3,5 @@
 [node name="FightsContainer" type="Node2D"]
 
 [node name="MultiplayerSpawner" type="MultiplayerSpawner" parent="."]
-_spawnable_scenes = PackedStringArray("res://Fight/Fight1v1.tscn")
+_spawnable_scenes = PackedStringArray("res://Maps/FightMap.tscn")
 spawn_path = NodePath("..")

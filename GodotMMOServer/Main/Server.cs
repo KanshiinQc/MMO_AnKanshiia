@@ -22,7 +22,7 @@ namespace SERVER
 
         #region Variables - Players & Fights Lists
         private List<PlayerCharacter> _connectedPeers = new();
-        private List<Fight1v1> _fightInstances = new();
+        private List<FightMap> _fightInstances = new();
         #endregion
 
         #region Variables - NodeContainers
@@ -55,7 +55,7 @@ namespace SERVER
             _playerScene = GD.Load<PackedScene>("res://Player/PlayerCharacter.tscn");
             _worldMapScene = GD.Load<PackedScene>("res://Maps/WorldMap.tscn");
             _oreScene = GD.Load<PackedScene>("res://Mining/Ore.tscn");
-            _fightScene = GD.Load<PackedScene>("res://Fight/Fight1v1.tscn");
+            _fightScene = GD.Load<PackedScene>("res://Maps/FightMap.tscn");
             _mobScene = GD.Load<PackedScene>("res://Mobs/Mob.tscn");
 
             _network.PeerConnected += OnPeerConnected;
@@ -220,6 +220,20 @@ namespace SERVER
             _playersContainer.AddChild(playerInstance, true);
         }
 
+
+        [Rpc(MultiplayerApi.RpcMode.AnyPeer)]
+        public void NotifyPlayerConnected()
+        {
+            var playerId = Multiplayer.GetRemoteSenderId();
+
+            // Get the username that was used during login
+            string username = _playerUsernames.GetValueOrDefault(playerId, $"Player{_connectedPlayersCount + 1}");
+
+            var user = _service.GetUserByUsername(username);
+            var playerInstance = PlayerHelper.ConstructPlayerInstance(playerId, user, _playerScene);
+            _connectedPeers.Add(playerInstance);
+            _playersContainer.AddChild(playerInstance, true);
+        }
         #region Player Authentication
         [Rpc(MultiplayerApi.RpcMode.AnyPeer)]
         public void ValidateLoginRequest(string username, string password)
@@ -285,7 +299,7 @@ namespace SERVER
         public void MovePlayer(float xPos, float yPos)
         {
             var playerId = Multiplayer.GetRemoteSenderId();
-            var player = GetPlayerById(playerId);
+            var player = GetPlayerByPeerId(playerId);
             
             if (player != null && !player.IsFighting)
             {
@@ -326,7 +340,7 @@ namespace SERVER
         public void RequestFightWithPlayer(int targetPlayerId)
         {
             var requesterId = (int)Multiplayer.GetRemoteSenderId();
-            var requesterPlayer = GetPlayerById(requesterId);
+            var requesterPlayer = GetPlayerByPeerId(requesterId);
             var targetPlayer = GetPlayerById(targetPlayerId);
 
             GD.Print($"Fight requested: Requester ID {requesterId} ({requesterPlayer?.Username}), Target ID {targetPlayerId} ({targetPlayer?.Username})");
@@ -347,56 +361,38 @@ namespace SERVER
             }
 
             // Create a new fight instance using the scene
-            var fightInstance = _fightScene.Instantiate<Fight1v1>();
+            var fightInstance = _fightScene.Instantiate<FightMap>();
             fightInstance.Player1Id = requesterId;
             fightInstance.Player2Id = targetPlayerId;
             fightInstance.Player1PositionBeforeFight = requesterPlayer.Position;
             fightInstance.Player2PositionBeforeFight = targetPlayer.Position;
-            
+
+            _playersContainer.RemoveChild(requesterPlayer);
+            _playersContainer.RemoveChild(targetPlayer);
+
             _fightInstances.Add(fightInstance);
             _fightsContainer.AddChild(fightInstance, true);
+
+            fightInstance.AddChild(requesterPlayer, true);
+            fightInstance.AddChild(targetPlayer, true);
 
             // Set both players' fighting status
             requesterPlayer.IsFighting = true;
             targetPlayer.IsFighting = true;
 
-            // Notify all other players that these players are in a fight
-            foreach (var player in _connectedPeers)
-            {
-                if (player.PeerID != requesterId && player.PeerID != targetPlayerId)
-                {
-                    RpcId(player.PeerID, "RemovePlayerFromWorld", requesterId);
-                    RpcId(player.PeerID, "RemovePlayerFromWorld", targetPlayerId);
-                }
-            }
-
             // Send fight participant information to both players
             RpcId(requesterId, "StartFightWithPlayer", new int[] { requesterId, targetPlayerId });
             RpcId(targetPlayerId, "StartFightWithPlayer", new int[] { requesterId, targetPlayerId });
 
-            // Notify both players
-            RpcId(requesterId, "NotifyPlayer", $"Starting fight with {targetPlayer.Username}!");
-            RpcId(targetPlayerId, "NotifyPlayer", $"{requesterPlayer.Username} has challenged you to a fight!");
+            // DO ALL IN THE START FIGHT WITH PLAYER RPC ...
+            //// Notify both players
+            //RpcId(requesterId, "NotifyPlayer", $"Starting fight with {targetPlayer.Username}!");
+            //RpcId(targetPlayerId, "NotifyPlayer", $"{requesterPlayer.Username} has challenged you to a fight!");
 
-            // Set initial turn
-            string firstPlayerName = requesterPlayer.Username;
-            RpcId(requesterId, "UpdateFightTurn", firstPlayerName);
-            RpcId(targetPlayerId, "UpdateFightTurn", firstPlayerName);
-
-            // Create a timer to end the fight after 3 seconds
-            var timer = new Timer();
-            AddChild(timer);
-            timer.WaitTime = 3.0;
-            timer.OneShot = true;
-            timer.Timeout += () =>
-            {
-                GD.Print($"Server timer: Ending fight between {requesterPlayer.Username} and {targetPlayer.Username}");
-                var fightId = (int)fightInstance.GetInstanceId();
-                GD.Print($"Server timer: Fight ID is {fightId}");
-                EndFight(fightId);
-                timer.QueueFree();
-            };
-            timer.Start();
+            //// Set initial turn
+            //string firstPlayerName = requesterPlayer.Username;
+            //RpcId(requesterId, "UpdateFightTurn", firstPlayerName);
+            //RpcId(targetPlayerId, "UpdateFightTurn", firstPlayerName);
         }
 
         [Rpc(MultiplayerApi.RpcMode.AnyPeer)]
@@ -496,7 +492,7 @@ namespace SERVER
         #endregion
 
         #region Utilities
-        private Fight1v1 GetFightInstanceByPlayerId(int playerId)
+        private FightMap GetFightInstanceByPlayerId(int playerId)
         {
             return _fightInstances.FirstOrDefault(fight => 
                 fight.Player1Id == playerId || fight.Player2Id == playerId);
@@ -504,7 +500,12 @@ namespace SERVER
 
         private PlayerCharacter GetPlayerById(int playerId)
         {
-            return _connectedPeers.FirstOrDefault(player => player.PeerID == playerId);
+            return _connectedPeers.FirstOrDefault(player => player.ID == playerId);
+        }
+
+        private PlayerCharacter GetPlayerByPeerId(int peerID)
+        {
+            return _connectedPeers.FirstOrDefault(player => player.PeerID == peerID);
         }
         #endregion
 

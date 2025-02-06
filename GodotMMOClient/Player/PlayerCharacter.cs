@@ -2,7 +2,7 @@ using Godot;
 
 public partial class PlayerCharacter : CharacterBody2D
 {
-    public bool IsLocalPlayer { get; private set; }
+    public bool IsLocalPlayer { get; set; }
 
     [Export]
     public int ID { get; set; }
@@ -44,22 +44,18 @@ public partial class PlayerCharacter : CharacterBody2D
         _usernameLabel.Text = Username;
 
         // Enable input processing
-        InputPickable = true;
-        
-        // Setup collision only if Area2D exists
         if (HasNode("Area2D"))
         {
             var area2D = GetNode<Area2D>("Area2D");
             if (area2D != null)
             {
+                area2D.InputPickable = true;
                 area2D.CollisionLayer = 1; // Layer for players
                 area2D.CollisionMask = 1;  // Can detect other players
                 area2D.Monitorable = true;
                 area2D.Monitoring = true;
             }
         }
-        
-        InputEvent += OnInputEvent;
     }
 
     public override void _Process(double delta)
@@ -102,45 +98,44 @@ public partial class PlayerCharacter : CharacterBody2D
                 }
             }
 
-            // Get the mouse position in the game world
-            var clickPos = GetGlobalMousePosition();
-            
-            // Check if we clicked on a player
+            // Check what we clicked using a point query
             var spaceState = GetWorld2D().DirectSpaceState;
-            var query = PhysicsRayQueryParameters2D.Create(Position, clickPos);
-            query.CollideWithAreas = true;
-            query.CollideWithBodies = true;
-            var result = spaceState.IntersectRay(query);
+            var parameters = new PhysicsPointQueryParameters2D
+            {
+                Position = GetGlobalMousePosition(),
+                CollideWithAreas = true,
+                CollideWithBodies = true
+            };
+            var results = spaceState.IntersectPoint(parameters);
 
-            // If we didn't hit anything, then move
-            if (result.Count == 0)
+            if (results.Count > 0)
             {
-                ServerAccessor.GetServerNode().MovePlayer(clickPos.X, clickPos.Y);
-            }
-            // If we hit something, check if it's a player
-            else if (result["collider"].As<Node>() is PlayerCharacter)
-            {
-                // Don't move, the OnInputEvent handler will handle player interaction
-                GD.Print("Clicked on a player, not moving");
-            }
-            // If we hit something else, then move
-            else
-            {
-                ServerAccessor.GetServerNode().MovePlayer(clickPos.X, clickPos.Y);
-            }
-        }
-    }
+                var collider = results[0]["collider"].As<Node>();
 
-    private void OnInputEvent(Node viewport, InputEvent @event, long shapeIdx)
-    {
-        if (!IsLocalPlayer && !IsFighting)
-        {
-            if (@event is InputEventMouseButton mouseEvent)
-            {
-                if (mouseEvent.ButtonIndex == MouseButton.Left && mouseEvent.Pressed)
+                if (collider is PlayerCharacter player)
                 {
-                    GD.Print("Clicked Player " + Name);
-                    ServerAccessor.GetServerNode().RequestFightWithPlayer(int.Parse(Name));
+                    if (!player.IsLocalPlayer && !player.IsFighting)
+                    {
+                        GD.Print("Clicked Player " + player.Username);
+                        ServerAccessor.GetServerNode().RequestFightWithPlayer(player.ID);
+                    }
+                    return;
+                }
+
+                else if (collider is Area2D area2 && area2.GetParent() is WorldTile worldTile)
+                {
+                    var centerPosition = worldTile.GetActualCenter();
+                    
+                    // If we're already at this tile's center (with some small tolerance), don't move
+                    if (Position.DistanceTo(centerPosition) < 1.0f)
+                    {
+                        GD.Print($"Already at tile center, not moving");
+                        return;
+                    }
+
+                    GD.Print($"Player {Username} clicked tile. Moving to center: {centerPosition}");
+                    ServerAccessor.GetServerNode().MovePlayer(centerPosition.X, centerPosition.Y);
+                    return;
                 }
             }
         }

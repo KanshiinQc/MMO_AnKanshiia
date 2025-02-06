@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://Fight/FightTile.cs" id="1_fwcak"]
 [ext_resource type="Texture2D" uid="uid://rdmd2bukut6u" path="res://WorldTiles/IsoTiles/tile006.png" id="2_5ltt5"]
-[ext_resource type="PackedScene" uid="uid://bfggsdyakb6fo" path="res://0-Frontend/GUI/SelectedTile.tscn" id="3_xydhg"]
+[ext_resource type="PackedScene" uid="uid://bfggsdyakb6fo" path="res://GUI/SelectedTile.tscn" id="3_xydhg"]
 
 [node name="FightTile" type="Node2D"]
 script = ExtResource("1_fwcak")
@@ -16,8 +16,4 @@ texture = ExtResource("2_5ltt5")
 polygon = PackedVector2Array(-12, -3, 0, -9, 12, -3, 0, 3)
 
 [node name="SelectedTile" parent="." instance=ExtResource("3_xydhg")]
-visible = false
-
-[connection signal="input_event" from="Area2D" to="." method="_on_area_2d_input_event"]
-[connection signal="mouse_entered" from="Area2D" to="." method="_on_area_2d_mouse_entered"]
-[connection signal="mouse_exited" from="Area2D" to="." method="_on_area_2d_mouse_exited"]
+visible = false 
