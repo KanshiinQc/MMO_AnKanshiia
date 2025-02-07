@@ -123,67 +123,36 @@ namespace SERVER
 
         #region Player Connections Handling
         [Rpc(MultiplayerApi.RpcMode.AnyPeer)]
-        public void AutomaticallyConnectPeer(long playerId, string username)
+        public void TriggerPlayerAutoLogin(long playerId, string username) {}
+
+        public void AutoLoginPlayer(long playerId, string username)
         {
             string password = "defaultpass123";
-            
+
             // Create the test account if it doesn't exist
             if (!_service.IsUsernameAvailable(username))
             {
-                RpcId(playerId, "AutomaticallyConnectPeer", playerId, username);
+                RpcId(playerId, "TriggerPlayerAutoLogin", playerId, username);
             }
-            else 
+            else
             {
                 _service.CreateUser(username, password);
-                RpcId(playerId, "AutomaticallyConnectPeer", playerId, username);
+                RpcId(playerId, "TriggerPlayerAutoLogin", playerId, username);
             }
         }
 
-        private void OnPeerConnected(long playerId)
+        private void OnPeerConnected(long PeerID)
         {
-            var test = _network.GetPeer((int)playerId);
             string username;
-
-            // List of predefined usernames
-            var availableNames = new[] { "Paul", "Jonathan", "Michael", "Blanche" };
-            
-            // Find the first unused name
+            var availableNames = new[] { "Paul", "Jonathan", "Michael", "Blanche", "Guillaume", "St-Lau" };
             username = availableNames.FirstOrDefault(name => !_usedUsernames.Contains(name));
-            
-            // If all predefined names are used, create a generic one
-            if (username == null)
-            {
-                username = $"Player{_connectedPlayersCount + 1}";
-            }
-
-            // Mark the username as used
             _usedUsernames.Add(username);
-            
-            // Store the username for this player ID
-            _playerUsernames[playerId] = username;
+            _playerUsernames[PeerID] = username;
 
-            GD.Print($"Player {playerId} connected with username: {username}");
+            GD.Print($"Player {PeerID} connected with username: {username}");
             
             // Use CallDeferred to ensure the peer is fully registered before sending RPCs
-            CallDeferred("DeferredAutomaticConnect", playerId, username);
-        }
-
-        private void DeferredAutomaticConnect(long playerId, string username)
-        {
-            string password = "defaultpass123";
-            
-            // Create the test account if it doesn't exist
-            if (!_service.IsUsernameAvailable(username))
-            {
-                RpcId(playerId, "AutomaticallyConnectPeer", playerId, username);
-            }
-            else 
-            {
-                _service.CreateUser(username, password);
-                RpcId(playerId, "AutomaticallyConnectPeer", playerId, username);
-            }
-            
-            _connectedPlayersCount++;
+            CallDeferred(nameof(AutoLoginPlayer),PeerID, username);
         }
 
         private void OnPeerDisconnected(long playerId)
@@ -220,20 +189,6 @@ namespace SERVER
             _playersContainer.AddChild(playerInstance, true);
         }
 
-
-        [Rpc(MultiplayerApi.RpcMode.AnyPeer)]
-        public void NotifyPlayerConnected()
-        {
-            var playerId = Multiplayer.GetRemoteSenderId();
-
-            // Get the username that was used during login
-            string username = _playerUsernames.GetValueOrDefault(playerId, $"Player{_connectedPlayersCount + 1}");
-
-            var user = _service.GetUserByUsername(username);
-            var playerInstance = PlayerHelper.ConstructPlayerInstance(playerId, user, _playerScene);
-            _connectedPeers.Add(playerInstance);
-            _playersContainer.AddChild(playerInstance, true);
-        }
         #region Player Authentication
         [Rpc(MultiplayerApi.RpcMode.AnyPeer)]
         public void ValidateLoginRequest(string username, string password)

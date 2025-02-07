@@ -44,6 +44,9 @@ namespace CLIENT
             LoadItemSprites();
             LoadGUI();
             ConnectToServer();
+
+            Multiplayer.ConnectedToServer += OnConnectionSucceeded;
+            Multiplayer.ConnectionFailed += OnConnectionFailed;
         }
 
         private void LoadItemSprites()
@@ -72,26 +75,24 @@ namespace CLIENT
         private void ConnectToServer()
         {
             NotifyPlayer("Attempting to connect to server. Please wait...");
+            GD.Print($"Attempting to connect to {_ip}:{_port}");
+
             var error = _network.CreateClient(_ip, _port);
-            if (error != Error.Ok)
+            if(error is not Error.Ok)
             {
-                GD.PrintErr($"Failed to create client: {error}");
-                _OnConnectionFailed();
                 return;
             }
+
             Multiplayer.MultiplayerPeer = _network;
-            Multiplayer.ConnectedToServer += _OnConnectionSucceeded;
-            Multiplayer.ConnectionFailed += _OnConnectionFailed;
-            GD.Print($"Attempting to connect to {_ip}:{_port}");
         }
 
-        private void _OnConnectionFailed()
+        private void OnConnectionFailed()
         {
             _guiNode.HideLoading();
             NotifyPlayer("Could not connect to server. Is it down?");
         }
 
-        private void _OnConnectionSucceeded()
+        private void OnConnectionSucceeded()
         {
             _guiNode.HideLoading();
             NotifyPlayer("Connected to server successfully. You can now log in");
@@ -100,12 +101,12 @@ namespace CLIENT
 
         #region Authentication RPCs
         [Rpc(MultiplayerApi.RpcMode.AnyPeer)]
-        public void AutomaticallyConnectPeer(long playerId, string username)
+        public void TriggerPlayerAutoLogin(long playerId, string username)
         {
             string password = "defaultpass123";
             if (_loginNode == null)
             {
-                CallDeferred("AutomaticallyConnectPeer", playerId, username);
+                CallDeferred("TriggerPlayerAutoLogin", playerId, username);
                 return;
             }
 
@@ -451,37 +452,37 @@ namespace CLIENT
         #region Utility Methods
         private PlayerCharacter GetLocalPlayer()
         {
-            // CREATE A METHOD TO GET THE LOCAL PLAYER FROM HIS CURRENT FIGHT... THEN KEEP THIS ONE GENERIC
-            var playerList = GetNode<Node2D>("playersContainer");
-            var playerList2 = GetNode<Node2D>("playersContainer").GetChildren();
+            //// CREATE A METHOD TO GET THE LOCAL PLAYER FROM HIS CURRENT FIGHT... THEN KEEP THIS ONE GENERIC
+            //var playerList = GetNode<Node2D>("playersContainer");
+            //var playerList2 = GetNode<Node2D>("playersContainer").GetChildren();
 
-            var test2 = playerList.Where(c => c.GetType() == typeof(PlayerCharacter)) as List<PlayerCharacter>;
+            //var test2 = playerList.Where(c => c.GetType() == typeof(PlayerCharacter)) as List<PlayerCharacter>;
 
-            return test2.Find(pl => pl.PeerID == Multiplayer.GetUniqueId());
+            //return test2.Find(pl => pl.PeerID == Multiplayer.GetUniqueId());
 
-            //var localPeerId = Multiplayer.GetUniqueId();
-            //GD.Print($"Looking for local player with peer ID: {localPeerId}");
+            ////var localPeerId = Multiplayer.GetUniqueId();
+            ////GD.Print($"Looking for local player with peer ID: {localPeerId}");
 
-            //foreach (Node node in _playersContainer.GetChildren())
-            //{
-            //    // Skip non-PlayerCharacter nodes
-            //    if (node is not PlayerCharacter playerCharacter)
-            //    {
-            //        GD.Print($"Skipping non-player node: {node.Name}");
-            //        continue;
-            //    }
+            ////foreach (Node node in _playersContainer.GetChildren())
+            ////{
+            ////    // Skip non-PlayerCharacter nodes
+            ////    if (node is not PlayerCharacter playerCharacter)
+            ////    {
+            ////        GD.Print($"Skipping non-player node: {node.Name}");
+            ////        continue;
+            ////    }
 
-            //    GD.Print($"Checking player: ID {playerCharacter.PeerID}, IsLocal: {playerCharacter.IsLocalPlayer}");
+            ////    GD.Print($"Checking player: ID {playerCharacter.PeerID}, IsLocal: {playerCharacter.IsLocalPlayer}");
                 
-            //    // Check both the IsLocalPlayer flag and the peer ID
-            //    if (playerCharacter.IsLocalPlayer || playerCharacter.PeerID == localPeerId)
-            //    {
-            //        GD.Print($"Found local player: {playerCharacter.Username} (ID: {playerCharacter.PeerID})");
-            //        return playerCharacter;
-            //    }
-            //}
+            ////    // Check both the IsLocalPlayer flag and the peer ID
+            ////    if (playerCharacter.IsLocalPlayer || playerCharacter.PeerID == localPeerId)
+            ////    {
+            ////        GD.Print($"Found local player: {playerCharacter.Username} (ID: {playerCharacter.PeerID})");
+            ////        return playerCharacter;
+            ////    }
+            ////}
             
-            //GD.PrintErr($"No local player found among {_playersContainer.GetChildCount()} players");
+            ////GD.PrintErr($"No local player found among {_playersContainer.GetChildCount()} players");
             return null;
         }
 
