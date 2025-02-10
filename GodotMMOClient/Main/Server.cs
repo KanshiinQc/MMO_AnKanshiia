@@ -1,4 +1,4 @@
-using Godot;
+﻿using Godot;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -6,6 +6,8 @@ namespace CLIENT
 {
     public partial class Server : Node
     {
+        private Label fpsCounter;
+
         #region Variables - Networking
         private ENetMultiplayerPeer _network = new();
         //private string _ip = "170.187.179.212";
@@ -29,7 +31,7 @@ namespace CLIENT
 
         #region Variables - Game Data
         private Dictionary<int, string> _itemSprites = new();
-        private int[] _currentFightParticipants;  // Store current fight participants
+        private string[] _currentFightUsernames;
         #endregion
 
         #region Initialization
@@ -78,7 +80,7 @@ namespace CLIENT
             GD.Print($"Attempting to connect to {_ip}:{_port}");
 
             var error = _network.CreateClient(_ip, _port);
-            if(error is not Error.Ok)
+            if (error is not Error.Ok)
             {
                 return;
             }
@@ -194,7 +196,7 @@ namespace CLIENT
         [Rpc(MultiplayerApi.RpcMode.AnyPeer)]
         public void RemovePlayerFromWorld(int playerId)
         {
-            
+
 
         }
 
@@ -207,7 +209,7 @@ namespace CLIENT
                 player.Visible = true;
                 player.SetProcess(true);
                 player.SetProcessInput(true);
-                
+
                 // Only try to access Area2D if it exists
                 if (player.HasNode("Area2D"))
                 {
@@ -222,74 +224,33 @@ namespace CLIENT
         }
 
         [Rpc(MultiplayerApi.RpcMode.AnyPeer)]
-        public void StartFightWithPlayer(int[] fightParticipantIds)
+        public void StartFightWithPlayer(string[] fightParticipantsUsernames)
         {
-            _currentFightParticipants = fightParticipantIds;
-            GD.Print($"StartFightWithPlayer: Received participants: [{string.Join(", ", fightParticipantIds)}]");
-            
+            _currentFightUsernames = fightParticipantsUsernames;
+            GD.Print($"StartFightWithPlayer: Received participants: [{string.Join(", ", fightParticipantsUsernames)}]");
+
             var localPlayer = GetLocalPlayer();
-            GD.Print($"Starting fight for local player: ID {localPlayer?.PeerID}, IsLocal: {localPlayer?.IsLocalPlayer}");
+            GD.Print($"Starting fight for local player: Username {localPlayer?.Username}, IsLocal: {localPlayer?.IsLocalPlayer}");
 
-            // Print all fights in container before starting
-            var actualFightCount = _fightsContainer.GetChildren().Count(n => n is FightMap);
-            GD.Print($"Current actual fights in container before starting: {actualFightCount}");
-            foreach (Node existingFight in _fightsContainer.GetChildren())
-            {
-                if (existingFight is FightMap fight1v1)
-                {
-                    GD.Print($"Existing fight - P1: {fight1v1.Player1Id}, P2: {fight1v1.Player2Id}");
-                }
-                else
-                {
-                    GD.Print($"Found non-fight node in container: {existingFight.GetType()}");
-                }
-            }
-
-            if (localPlayer != null)
-            {
-                // Instead of hiding the local player, just disable processing
-                localPlayer.SetProcess(false);
-                // Keep the player visible
-                localPlayer.Visible = true;
-                GD.Print($"Disabled local player processing: {localPlayer.Username}");
-            }
-            else
+            if (localPlayer is null)
             {
                 GD.PrintErr("Could not find local player when starting fight!");
-                return;
             }
 
-            // Hide all players not in the fight
-            foreach (Node node in _playersContainer.GetChildren())
-            {
-                if (node is not PlayerCharacter playerCharacter)
-                    continue;
-
-                // If the player is not in the fight participants list, hide them
-                if (!fightParticipantIds.Contains((int)playerCharacter.PeerID))
-                {
-                    playerCharacter.Visible = false;
-                }
-            }
-
-            // Switch to fight map
             _playersContainer.SetProcess(false);
             _playersContainer.Visible = false;
 
             _worldMapNode.Visible = false;
             _worldMapNode.SetProcess(false);
-            
-            // Adjust camera for fight scene
-            GetViewport().GetCamera2D().Zoom = new Vector2(3, 3);
 
-            // Hide world resources during fight
-            foreach (Node resource in _resourcesContainer.GetChildren())
-            {
-                if (resource is Ore ore)
-                {
-                    ore.Visible = false;
-                }
-            }
+            _resourcesContainer.SetProcess(false);
+            _resourcesContainer.Visible = false;
+
+            _fightsContainer.Visible = true;
+            _fightsContainer.SetProcess(true);
+
+            GetViewport().GetCamera2D().Zoom = new Vector2(2, 2);
+
             _guiNode.ShowFightTurns();
         }
 
@@ -309,7 +270,7 @@ namespace CLIENT
         public void TerminateFight(Vector2 playerInitialPosition)
         {
             GD.Print($"TerminateFight: Returning player to position {playerInitialPosition}");
-            
+
             var localPlayer = GetLocalPlayer();
             if (localPlayer != null)
             {
@@ -328,7 +289,7 @@ namespace CLIENT
             // Switch back to world map
             _worldMapNode.Visible = true;
             _worldMapNode.SetProcess(true);
-            
+
             // Restore world camera zoom
             GetViewport().GetCamera2D().Zoom = new Vector2(4, 4);
 
@@ -356,10 +317,10 @@ namespace CLIENT
         public void ShowLoot(Dictionary<int, int> lootDictionary)
         {
             _guiNode.ShowLootWindow();
-            
+
             var keys = lootDictionary.Keys.ToArray();
             var values = lootDictionary.Values.ToArray();
-            
+
             for (int i = 0; i < lootDictionary.Count; i++)
             {
                 var itemUIScene = GD.Load<PackedScene>("res://Items/ItemUI.tscn");
@@ -381,7 +342,7 @@ namespace CLIENT
         public void EndFight(int fightId)
         {
             GD.Print($"EndFight: Ending fight with ID {fightId}");
-            
+
             // Find and remove the fight instance from the container
             foreach (Node node in _fightsContainer.GetChildren())
             {
@@ -452,44 +413,41 @@ namespace CLIENT
         #region Utility Methods
         private PlayerCharacter GetLocalPlayer()
         {
-            //// CREATE A METHOD TO GET THE LOCAL PLAYER FROM HIS CURRENT FIGHT... THEN KEEP THIS ONE GENERIC
-            //var playerList = GetNode<Node2D>("playersContainer");
-            //var playerList2 = GetNode<Node2D>("playersContainer").GetChildren();
-
-            //var test2 = playerList.Where(c => c.GetType() == typeof(PlayerCharacter)) as List<PlayerCharacter>;
-
-            //return test2.Find(pl => pl.PeerID == Multiplayer.GetUniqueId());
-
-            ////var localPeerId = Multiplayer.GetUniqueId();
-            ////GD.Print($"Looking for local player with peer ID: {localPeerId}");
-
-            ////foreach (Node node in _playersContainer.GetChildren())
-            ////{
-            ////    // Skip non-PlayerCharacter nodes
-            ////    if (node is not PlayerCharacter playerCharacter)
-            ////    {
-            ////        GD.Print($"Skipping non-player node: {node.Name}");
-            ////        continue;
-            ////    }
-
-            ////    GD.Print($"Checking player: ID {playerCharacter.PeerID}, IsLocal: {playerCharacter.IsLocalPlayer}");
-                
-            ////    // Check both the IsLocalPlayer flag and the peer ID
-            ////    if (playerCharacter.IsLocalPlayer || playerCharacter.PeerID == localPeerId)
-            ////    {
-            ////        GD.Print($"Found local player: {playerCharacter.Username} (ID: {playerCharacter.PeerID})");
-            ////        return playerCharacter;
-            ////    }
-            ////}
+            var localPeerId = Multiplayer.GetUniqueId();
             
-            ////GD.PrintErr($"No local player found among {_playersContainer.GetChildCount()} players");
+            // First check in fights container
+            foreach (Node fightNode in _fightsContainer.GetChildren())
+            {
+                if (fightNode is not FightMap fightMap)
+                    continue;
+
+                // Check all children of the fight map for the local player
+                foreach (Node node in fightMap.GetChildren())
+                {
+                    if (node is PlayerCharacter playerCharacter && playerCharacter.PeerID == localPeerId)
+                    {
+                        return playerCharacter;
+                    }
+                }
+            }
+
+            // If not in fight, check players container
+            foreach (Node node in _playersContainer.GetChildren())
+            {
+                if (node is PlayerCharacter playerCharacter && playerCharacter.PeerID == localPeerId)
+                {
+                    return playerCharacter;
+                }
+            }
+
             return null;
         }
+
 
         private FightMap GetLocalPlayerFight()
         {
             var localPlayer = GetLocalPlayer();
-            if (localPlayer == null) 
+            if (localPlayer == null)
             {
                 GD.PrintErr("GetLocalPlayerFight: Local player is null");
                 return null;
@@ -497,7 +455,7 @@ namespace CLIENT
 
             GD.Print($"GetLocalPlayerFight: Looking for fight with local player ID: {localPlayer.PeerID}");
             GD.Print($"GetLocalPlayerFight: Number of fights in container: {_fightsContainer.GetChildCount()}");
-            
+
             foreach (FightMap fight in _fightsContainer.GetChildren().Where(children => children.GetType() == typeof(FightMap)))
             {
                 GD.Print($"fight: Checking fight - P1: {fight.Player1Id}, P2: {fight.Player2Id}");
@@ -507,7 +465,7 @@ namespace CLIENT
                     return fight;
                 }
             }
-            
+
             GD.PrintErr($"GetLocalPlayerFight: No fight found for player {localPlayer.Username} (ID: {localPlayer.PeerID})");
             return null;
         }
@@ -558,4 +516,4 @@ namespace CLIENT
             }
         }
     }
-} 
+}

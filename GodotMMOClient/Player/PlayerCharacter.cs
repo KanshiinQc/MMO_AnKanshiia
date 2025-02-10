@@ -27,7 +27,6 @@ public partial class PlayerCharacter : CharacterBody2D
 
     private Label _usernameLabel;
     private float _angle;
-    private const float Speed = 100;
     private Vector2 _targetPosition;
 
     public override void _Ready()
@@ -70,7 +69,7 @@ public partial class PlayerCharacter : CharacterBody2D
 
     private void HandleInput()
     {
-        if (Input.IsActionJustPressed("mouse_left_click") && !IsFighting)
+        if (IsLocalPlayer && Input.IsActionJustPressed("mouse_left_click") && !IsFighting)
         {
             // Check if we're clicking on a UI element
             var hud = GetTree().Root.GetNode<GUI>("HUD");

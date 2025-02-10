@@ -136,5 +136,10 @@ grow_vertical = 0
 text = "Kanshiin's turn"
 horizontal_alignment = 2
 
+[node name="FpsCounter" type="Label" parent="."]
+offset_right = 40.0
+offset_bottom = 23.0
+text = "123"
+
 [connection signal="text_submitted" from="ChatBox/HBoxContainer/LineEdit" to="ChatBox" method="_on_line_edit_text_submitted"]
 [connection signal="gui_input" from="LootWindow" to="." method="_on_loot_window_gui_input"]

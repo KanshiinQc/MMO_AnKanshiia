@@ -4,6 +4,7 @@ using System.Linq;
 using SERVER.Services;
 using SERVER.Helpers;
 using System;
+using Microsoft.EntityFrameworkCore.ChangeTracking.Internal;
 
 namespace SERVER
 {
@@ -11,6 +12,7 @@ namespace SERVER
     {
         #region Services
         private readonly FodusService _service;
+        private Label fpsCounter;
         #endregion
 
         #region Variables - Networking
@@ -70,7 +72,7 @@ namespace SERVER
             _mobsContainer = GetNode<Node2D>("MobsContainer");
             _worldMap = _worldMapScene.Instantiate() as Node2D;
             _worldMap.Visible = false;
-
+            fpsCounter = GetNode<Label>("FpsCounter");
             StartServer();
         }
 
@@ -79,7 +81,62 @@ namespace SERVER
             CreateServer();
             SpawnWorldMap();
             SpawnResources();
-            GD.Print("Server Started");
+            //Spawn10FightMaps();
+            GD.Print("Server Started");    
+        }
+
+        private void Spawn10FightMaps()
+        {
+            for (int i = 0; i < 10; i++)
+            {
+                var fightMap = _fightScene.Instantiate<FightMap>();
+                _fightsContainer.AddChild(fightMap, true);
+
+                // Disable all nodes recursively
+                DisableNodeAndChildren(fightMap);
+
+                _fightInstances.Add(fightMap);
+            }
+        }
+
+        private void DisableNodeAndChildren(Node node)
+        {
+            // Set this node's properties
+            if (node is Node2D node2D)
+            {
+                node2D.Visible = false;
+            }
+
+            node.ProcessMode = Node.ProcessModeEnum.Disabled;
+
+            // Recursively process all children
+            foreach (var child in node.GetChildren())
+            {
+                DisableNodeAndChildren(child);
+            }
+        }
+
+        // When activating a fight map
+        private void EnableNodeAndChildren(Node node)
+        {
+            // Set this node's properties
+            if (node is Node2D node2D)
+            {
+                node2D.Visible = true;
+            }
+
+            node.ProcessMode = Node.ProcessModeEnum.Inherit;
+
+            // Recursively process all children
+            foreach (var child in node.GetChildren())
+            {
+                EnableNodeAndChildren(child);
+            }
+        }
+
+        public void ActivateFightMap(FightMap fightMap)
+        {
+            EnableNodeAndChildren(fightMap);
         }
 
         private void CreateServer()
@@ -316,38 +373,47 @@ namespace SERVER
             }
 
             // Create a new fight instance using the scene
-            var fightInstance = _fightScene.Instantiate<FightMap>();
-            fightInstance.Player1Id = requesterId;
-            fightInstance.Player2Id = targetPlayerId;
-            fightInstance.Player1PositionBeforeFight = requesterPlayer.Position;
-            fightInstance.Player2PositionBeforeFight = targetPlayer.Position;
+            FightMap fightMap = _fightScene.Instantiate() as FightMap;
+            fightMap.IsCurrentlyUsed = true;
+            fightMap.Player1Id = requesterId;
+            fightMap.Player2Id = targetPlayerId;
+            fightMap.Player1PositionBeforeFight = requesterPlayer.Position;
+            fightMap.Player2PositionBeforeFight = targetPlayer.Position;
+            _fightsContainer.AddChild(fightMap, true);
 
             _playersContainer.RemoveChild(requesterPlayer);
             _playersContainer.RemoveChild(targetPlayer);
 
-            _fightInstances.Add(fightInstance);
-            _fightsContainer.AddChild(fightInstance, true);
+            var player1Infos = requesterPlayer;
+            var player2Infos = targetPlayer;
 
-            fightInstance.AddChild(requesterPlayer, true);
-            fightInstance.AddChild(targetPlayer, true);
+            requesterPlayer = _playerScene.Instantiate() as PlayerCharacter;
+            requesterPlayer.Name = player1Infos.Name;
+            requesterPlayer.PeerID = player1Infos.PeerID;
+            requesterPlayer.Position = player1Infos.Position;
+            requesterPlayer.ID = player1Infos.ID;
+            requesterPlayer.Username = player1Infos.Username;
+            requesterPlayer.IsFighting = player1Infos.IsFighting;
+            requesterPlayer.CurrentHealth = player1Infos.CurrentHealth;
+            requesterPlayer.MaxHealth = player1Infos.MaxHealth;
 
-            // Set both players' fighting status
-            requesterPlayer.IsFighting = true;
-            targetPlayer.IsFighting = true;
+            targetPlayer = _playerScene.Instantiate() as PlayerCharacter;
+            targetPlayer.Name = player2Infos.Name;
+            targetPlayer.PeerID = player2Infos.PeerID;
+            targetPlayer.Position = player2Infos.Position;
+            targetPlayer.ID = player2Infos.ID;
+            targetPlayer.Username = player2Infos.Username;
+            targetPlayer.IsFighting = player2Infos.IsFighting;
+            targetPlayer.CurrentHealth = player2Infos.CurrentHealth;
+            targetPlayer.MaxHealth = player2Infos.MaxHealth;
+
+
+            fightMap.AddChild(requesterPlayer, true);
+            fightMap.AddChild(targetPlayer, true);
 
             // Send fight participant information to both players
-            RpcId(requesterId, "StartFightWithPlayer", new int[] { requesterId, targetPlayerId });
-            RpcId(targetPlayerId, "StartFightWithPlayer", new int[] { requesterId, targetPlayerId });
-
-            // DO ALL IN THE START FIGHT WITH PLAYER RPC ...
-            //// Notify both players
-            //RpcId(requesterId, "NotifyPlayer", $"Starting fight with {targetPlayer.Username}!");
-            //RpcId(targetPlayerId, "NotifyPlayer", $"{requesterPlayer.Username} has challenged you to a fight!");
-
-            //// Set initial turn
-            //string firstPlayerName = requesterPlayer.Username;
-            //RpcId(requesterId, "UpdateFightTurn", firstPlayerName);
-            //RpcId(targetPlayerId, "UpdateFightTurn", firstPlayerName);
+            RpcId(requesterId, "StartFightWithPlayer", new string[] { requesterPlayer.Username, targetPlayer.Username });
+            RpcId(targetPlayer.PeerID, "StartFightWithPlayer", new string[] { requesterPlayer.Username, targetPlayer.Username });
         }
 
         [Rpc(MultiplayerApi.RpcMode.AnyPeer)]
@@ -357,7 +423,7 @@ namespace SERVER
         public void AddPlayerToWorld(int playerId) { }
 
         [Rpc(MultiplayerApi.RpcMode.AnyPeer)]
-        public void StartFightWithPlayer(int[] fightParticipantIds)
+        public void StartFightWithPlayer(string[] fightParticipantsUsernames)
         {
             // ... existing implementation ...
         }
@@ -470,6 +536,14 @@ namespace SERVER
             var mobInstance = _mobScene.Instantiate<Node2D>();
             mobInstance.Position = position;
             _mobsContainer.AddChild(mobInstance, true);
+        }
+
+        public override void _Process(double delta)
+        {
+            if(fpsCounter is not null)
+            {
+                fpsCounter.Text = "FPS " + Engine.GetFramesPerSecond();
+            }           
         }
     }
 } 

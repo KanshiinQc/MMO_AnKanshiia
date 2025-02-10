@@ -1,7 +1,7 @@
 [gd_scene load_steps=6 format=3 uid="uid://djhnh2nclx5np"]
 
 [ext_resource type="Script" path="res://Maps/FightMap.cs" id="1_pd2m4"]
-[ext_resource type="PackedScene" path="res://Fight/FightTile.tscn" id="2_2fglb"]
+[ext_resource type="PackedScene" uid="uid://cnnbsig7l72j3" path="res://Fight/FightTile.tscn" id="2_2fglb"]
 
 [sub_resource type="TileSetScenesCollectionSource" id="TileSetScenesCollectionSource_dvl4r"]
 resource_name = "FightTile"

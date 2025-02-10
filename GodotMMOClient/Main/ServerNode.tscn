@@ -4,8 +4,8 @@
 [ext_resource type="PackedScene" uid="uid://dy2m8mvynu12i" path="res://Containers/PlayersContainer.tscn" id="3_b3dro"]
 [ext_resource type="PackedScene" uid="uid://g5njh648ou6c" path="res://Containers/ResourcesContainer.tscn" id="4_jvjom"]
 [ext_resource type="PackedScene" uid="uid://rvh5j2f13xlh" path="res://Containers/FightsContainer.tscn" id="6_4oqe3"]
-[ext_resource type="PackedScene" uid="uid://bfbx4cef0kf0b" path="res://Maps/WorldMapTM.tscn" id="7_62rvs"]
-[ext_resource type="PackedScene" uid="uid://c4yvxvxpxqxxx" path="res://Containers/MobsContainer.tscn" id="8_mobxx"]
+[ext_resource type="PackedScene" uid="uid://bfbx4cef0kf0b" path="res://Maps/WorldMap.tscn" id="7_62rvs"]
+[ext_resource type="PackedScene" path="res://Containers/MobsContainer.tscn" id="8_mobxx"]
 
 [node name="ServerNode" type="Node2D"]
 y_sort_enabled = true

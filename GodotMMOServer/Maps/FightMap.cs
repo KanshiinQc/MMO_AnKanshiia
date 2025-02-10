@@ -15,4 +15,7 @@ public partial class FightMap : Node2D
 
     [Export]
     public int CurrentTurnPlayerId { get; set; }
+
+    [Export]
+    public bool IsCurrentlyUsed { get; set; }
 }

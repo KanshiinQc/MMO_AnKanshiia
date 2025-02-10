@@ -17,3 +17,8 @@ script = ExtResource("1_0nk6y")
 [node name="ResourcesContainer" parent="." instance=ExtResource("3_35em0")]
 
 [node name="FightsContainer" parent="." instance=ExtResource("4_8lgbm")]
+
+[node name="FpsCounter" type="Label" parent="."]
+offset_right = 40.0
+offset_bottom = 23.0
+text = "test"

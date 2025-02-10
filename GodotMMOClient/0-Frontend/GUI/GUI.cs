@@ -8,6 +8,7 @@ public partial class GUI : Node
     private VBoxContainer _lootWindow;
     private AnimatedSprite2D _loadingAnimation;
     private Label _currentPlayerTurnLabel;
+    private Label _fpsCounter;
 
     public override void _Ready()
     {
@@ -16,6 +17,7 @@ public partial class GUI : Node
         _lootWindow = GetNode<VBoxContainer>("LootWindow");
         _loadingAnimation = GetNode<AnimatedSprite2D>("Loading");
         _currentPlayerTurnLabel = GetNode<Label>("CurrentPlayerTurn");
+        _fpsCounter = GetNode<Label>("FpsCounter");
     }
 
     public void InitializePlayerHealth(int maxHealth, int currentHealth)
@@ -113,5 +115,13 @@ public partial class GUI : Node
     public void UpdateTurnLabel(string playerName)
     {
         _currentPlayerTurnLabel.Text = $"[{playerName}]'s turn";
+    }
+
+    public override void _Process(double delta)
+    {
+        if (_fpsCounter is not null)
+        {
+            _fpsCounter.Text = "FPS " + Engine.GetFramesPerSecond();
+        }
     }
 } 

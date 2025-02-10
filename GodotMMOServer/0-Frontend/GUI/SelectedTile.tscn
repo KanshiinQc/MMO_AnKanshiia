@@ -1,6 +1,0 @@
-[gd_scene load_steps=2 format=3 uid="uid://bfggsdyakb6fo"]
-
-[ext_resource type="Texture2D" uid="uid://dn1xhotd7yuec" path="res://0-Frontend/GUI/SelectedTile.png" id="1_bstxy"]
-
-[node name="SelectedTile" type="Sprite2D"]
-texture = ExtResource("1_bstxy")
